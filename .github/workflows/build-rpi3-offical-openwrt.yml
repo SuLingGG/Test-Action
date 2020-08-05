@@ -29,6 +29,7 @@ env:
   DEVICE: openwrt-bcm27xx-bcm2710-rpi-3
   DIY_SH: scripts/offical-openwrt.sh
   SSH_ACTIONS: false
+  IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
   UPLOAD_EXT4_IMAGES: true
   UPLOAD_SQUASHFS_IMAGES: true
@@ -153,12 +154,8 @@ jobs:
         then
             mkdir -p files/www/ipv6-modules
             cp bin/packages/$PLATFORM/luci/luci-proto-ipv6* files/www/ipv6-modules
-            pushd bin/packages/$PLATFORM/base
-            cp {ipv6helper* odhcpd-ipv6only* odhcp6c* 6in4*} "files/www/ipv6-modules"
-            popd
-            pushd bin/targets/$TARGET/$SUBTARGET/packages
-            cp {ip6tables* kmod-nf-nat6* kmod-ipt-nat6* kmod-sit* ip6tables-extra* kmod-ip6tables-extra* ip6tables-mod-nat*} "files/www/ipv6-modules"
-            popd
+            cp bin/packages/$PLATFORM/base/{ipv6helper*,odhcpd-ipv6only*,odhcp6c*,6in4*} "files/www/ipv6-modules"
+            cp bin/targets/$TARGET/$SUBTARGET/packages/{ip6tables*,kmod-nf-nat6*,kmod-ipt-nat6*,kmod-sit*,ip6tables-extra*,kmod-ip6tables-extra*,ip6tables-mod-nat*} "files/www/ipv6-modules"
             mkdir -p files/bin
             cp ../scripts/ipv6helper.sh files/bin/ipv6helper
         fi
