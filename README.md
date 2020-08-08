@@ -20,7 +20,7 @@
 
 ## 支持设备与固件下载：
 
-**点击下表中蓝色 “√” 即可跳转到该设备固件下载页面。**
+**点击下表中 “⬇️” 即可跳转到该设备固件下载页面。**
 
 | 支持设备/版本(内核) |                          Lean (5.4)                          |                        Offical (5.4)                         |                        Project (5.4)                         |
 | :-----------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
@@ -29,7 +29,8 @@
 |      树莓派 2B      | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+2+Lean%27s+OpenWrt%22) | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+2+Offical+OpenWrt%22) |                              -                               |
 |    树莓派 3B/3B+    | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+3+Lean%27s+OpenWrt%22) | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+3+Offical+OpenWrt%22) |                              -                               |
 |      树莓派 4B      | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+4+Lean%27s+OpenWrt%22) | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+Raspberry+Pi+4+Offical+OpenWrt%22) |                              -                               |
-|       x86_64        | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+x86_64+Lean%27s+OpenWrt%22) |                              -                               |                              -                               |
+|    x86_64 (64位)    | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+x86_64+Lean%27s+OpenWrt%22) |                              -                               |                              -                               |
+| x86_generic (32位)  | [⬇️](https://github.com/SuLingGG/OpenWrt-Rpi/actions?query=workflow%3A%22Build+x86_generic+Lean%27s+OpenWrt%22) |                              -                               |                              -                               |
 
 其中：
 
@@ -47,7 +48,7 @@
 
 ## 注意事项：
 
-1. 点击上表中蓝色 “√” 即可跳转到该设备固件下载页面。
+1. 点击上表中 “⬇️” 即可跳转到该设备固件下载页面。
 2. 在固件编译完成后，会上传一份副本到 WeTransfer 和 奶牛快传，对于国内网络用户，为提高下载体验，可下载存放于这两个网站中的固件副本，副本下载地址位于固件下载页面中固件文件列表下的 Annotations 提示框内 (还是找不到？[点击这里](https://shop.io.mi-img.com/app/shop/img?id=shop_9e991a5edd21e997d44588bc376ca1e4.png)~) 。在极少数情况下，因网络原因这两份副本可能会上传失败，如果遇到这种情况，就只能下载存放在 Github Action 里的固件了:
 3. 由于 Github Action 限制，需要登录 Github 账号才可下载存放于 Github Action 中的固件 **(未登录时固件链接不可被点击)**，但 WeTransfer 和 奶牛快传 的固件下载链接在未登录状态下可正常查看，不受影响；
 4. 如果需要下载存放于 Github Action 上的固件，由于众所周知的原因，请尽量使用科学上网方式下载固件，固件下载完成后，请下载 sha256sums 文件或使用压缩软件的 "测试压缩文件" 功能来验证固件的完整性；
@@ -100,6 +101,24 @@ x86_64 固件同时提供 Legacy 启动与 UEFI 启动版本，另外额外提�
 ### 第三方软件包集成情况:
 
 另外，本项目固件均集成了众多优秀的第三方软件包项目，固件内软件包集成情况可以下载与固件一同提供的 manifest 文件查看，因篇幅所限，这里不再赘述。
+
+## 启用 IPV6 支持 (Beta)
+
+树莓派 1~4 与 x86 平台默认未集成 IPV6 支持，但固件内添加了 `ipv6-helper`工具以方便大家安装和卸载 IPV6 组件。
+
+登录 OpenWrt 的 SSH 或 TTYD，执行：
+
+`ipv6-helper` ：得到工具的帮助信息；
+
+`ipv6-helper install` ：安装 IPV6 相关组件并自动完成 IPV6 配置；
+
+`ipv6-helper remove` ：卸载 IPV6 相关组件并禁用 IPV6；
+
+`ipv6-helper clean` ：卸载 mwan3 及相关组件 (不可逆，一般不需要进行此步)。
+
+命令执行完毕后会提示重启，可选择立即重启和稍后重启，按提示操作即可。
+
+本工具目前处于测试状态，可能存在一些不确定性，请大家多多测试反馈~
 
 ## 文件说明:
 

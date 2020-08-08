@@ -8,6 +8,9 @@
 # Modify default IP
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
 
+# Mod Luci to Lienol
+sed -i 's/coolsnowwolf\/luci/Lienol\/openwrt-luci.git\;dev-18.06/g' feeds.conf.default
+
 # Add luci-app-ssr-plus
 pushd package/lean
 git clone --depth=1 https://github.com/fw876/helloworld
@@ -38,7 +41,8 @@ git clone --depth=1 -b master https://github.com/vernesong/OpenClash
 git clone --depth=1 https://github.com/rufengsuixing/luci-app-onliner
 
 # Add luci-app-adguardhome
-git clone --depth=1 https://github.com/kongfl888/luci-app-adguardhome
+svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/luci-app-adguardhome
+svn co https://github.com/project-openwrt/openwrt/trunk/package/ntlf9t/AdGuardHome
 
 # Add luci-app-diskman
 git clone --depth=1 https://github.com/lisaac/luci-app-diskman
@@ -68,12 +72,6 @@ svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/msgpack-c
 # Add gotop
 svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/gotop
 
-# Subscribe converters
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/subconverter
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/jpcre2
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/rapidjson
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/duktape
-
 # Add smartdns
 svn co https://github.com/pymumu/smartdns/trunk/package/openwrt ../smartdns
 svn co https://github.com/project-openwrt/openwrt/trunk/package/ntlf9t/luci-app-smartdns ../luci-app-smartdns
@@ -91,7 +89,7 @@ popd
 pushd package/lean/default-settings/files
 sed -i "/commit luci/i\uci set luci.main.mediaurlbase='/luci-static/argon'" zzz-default-settings
 sed -i '/http/d' zzz-default-settings
-sed -i '/exit/i\chmod +x /bin/ipv6helper' zzz-default-settings
+sed -i '/exit/i\chmod +x /bin/ipv6-helper' zzz-default-settings
 popd
 
 # Fix libssh
