@@ -8,9 +8,6 @@
 # Modify default IP
 #sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
 
-# Mod Luci to Lienol
-sed -i 's/coolsnowwolf\/luci/Lienol\/openwrt-luci.git\;dev-18.06/g' feeds.conf.default
-
 # Add luci-app-ssr-plus
 pushd package/lean
 git clone --depth=1 https://github.com/fw876/helloworld
