@@ -83,7 +83,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv8
-        ../scripts/create-acl.sh
+        ../scripts/create-acl.sh -a
         rm -f package/lean/helloworld/luci-app-ssr-plus/po/zh_Hans
         ## If your device is Raspberrt Pi 4B:
         # chmod +x ../scripts/enable-rpi4-wifi.sh
