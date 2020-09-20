@@ -25,7 +25,7 @@ git clone --depth=1 https://github.com/SuLingGG/default-settings
 
 # Add Project OpenWrt's autocore
 rm -rf autocore
-svn co https://github.com/project-openwrt/openwrt/branches/18.06-kernel5.4/package/lean/autocore
+svn co https://github.com/project-openwrt/openwrt/branches/master/package/lean/autocore
 
 # Add luci-app-ssr-plus
 git clone --depth=1 https://github.com/fw876/helloworld
@@ -57,9 +57,9 @@ git clone -b master --depth=1 https://github.com/vernesong/OpenClash
 # Add luci-app-onliner. (need luci-app-nlbwmon)
 git clone --depth=1 https://github.com/rufengsuixing/luci-app-onliner
 
-# Add luci-app-adguardhome.
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/luci-app-adguardhome
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ntlf9t/AdGuardHome
+# Add luci-app-adguardhome
+svn co https://github.com/Lienol/openwrt/trunk/package/diy/luci-app-adguardhome
+svn co https://github.com/Lienol/openwrt/trunk/package/diy/adguardhome
 
 # Add openwrt-iptvhelper.
 git clone --depth=1 https://github.com/riverscn/openwrt-iptvhelper
@@ -78,6 +78,7 @@ git clone --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus
 
 # Add luci-theme-argon
 git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon
+git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config
 
 # Add smartdns
 svn co https://github.com/pymumu/smartdns/trunk/package/openwrt ../smartdns
@@ -93,17 +94,11 @@ git clone --depth=1 https://github.com/lisaac/luci-app-dockerman
 git clone --depth=1 https://github.com/lisaac/luci-lib-docker
 
 # Add tmate
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/tmate
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/msgpack-c
+git clone --depth=1 https://github.com/project-openwrt/openwrt-tmate
 
-# Add gotop
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/gotop
+# Add subconverter
+git clone --depth=1 https://github.com/tindy2013/openwrt-subconverter
 
-# Subscribe converters
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/subconverter
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/jpcre2
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/rapidjson
-svn co https://github.com/project-openwrt/openwrt/trunk/package/ctcgfw/duktape
 popd
 
 # Mod zzz-default-settings
@@ -136,6 +131,11 @@ sed -i 's/dnsmasq i/dnsmasq-full i/g' include/target.mk
 git clone https://github.com/openwrt-dev/po2lmo.git
 pushd po2lmo
 make && sudo make install
+popd
+
+# Fix mt76 wireless driver
+pushd package/kernel/mt76
+sed -i '/mt7662u_rom_patch.bin/a\\techo mt76-usb disable_usb_sg=1 > $\(1\)\/etc\/modules.d\/mt76-usb' Makefile
 popd
 
 # Convert Translation

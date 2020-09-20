@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's OpenWrt
+name: Build NanoPi R2S Lean's OpenWrt
 
 on:
   repository_dispatch:
@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/rpi4-lean-openwrt.config'
+      - 'config/lean/r2s-lean-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,8 +25,8 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/rpi4-lean-openwrt.config
-  DEVICE: openwrt-bcm27xx-bcm2711-rpi-4
+  CONFIG_FILE: config/lean/r2s-lean-openwrt.config
+  DEVICE: openwrt-rockchip-armv8-friendlyarm_nanopi-r2s
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false
   IPV6MOD_IN_FIRMWARE: true
@@ -208,28 +208,14 @@ jobs:
         name: ${{ env.DEVICE }}-rootfs.tar.gz
         path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-rootfs.tar.gz
         
-    - name: Upload SquashFS Factory Image
-      uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
-      with:
-        name: ${{ env.DEVICE }}-squashfs-factory.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-factory.img
-        
-    - name: Upload SquashFS Sysupgrade Image
+    - name: Upload SquashFS Image
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
       with:
         name: ${{ env.DEVICE }}-squashfs-sysupgrade.img
         path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-sysupgrade.img
         
-    - name: Upload Ext4 Factory Image
-      uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
-      with:
-        name: ${{ env.DEVICE }}-ext4-factory.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-factory.img
-        
-    - name: Upload Ext4 Sysupgrade Image
+    - name: Upload Ext4 Image
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
       with:

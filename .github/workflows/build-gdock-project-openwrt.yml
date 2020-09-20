@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's OpenWrt
+name: Build G-Dock Project OpenWrt
 
 on:
   repository_dispatch:
@@ -16,24 +16,20 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/rpi4-lean-openwrt.config'
+      - 'config/project/gdock-project-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
 #    types: started
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  REPO_BRANCH: master
-  CONFIG_FILE: config/lean/rpi4-lean-openwrt.config
-  DEVICE: openwrt-bcm27xx-bcm2711-rpi-4
-  DIY_SH: scripts/lean-openwrt.sh
+  REPO_URL: https://github.com/project-openwrt/openwrt
+  REPO_BRANCH: openwrt-18.06-k5.4
+  CONFIG_FILE: config/project/gdock-project-openwrt.config
+  DEVICE: openwrt-ipq40xx-p2w_r619ac
+  DIY_SH: scripts/project-openwrt.sh
   SSH_ACTIONS: false
-  IPV6MOD_IN_FIRMWARE: true
-  KMODS_IN_FIRMWARE: true
-  UPLOAD_EXT4_IMAGES: true
-  UPLOAD_SQUASHFS_IMAGES: true
-  UPLOAD_ROOTFS: true
+  KMODS_IN_FIRMWARE: false
   UPLOAD_WETRANSFER: true
   UPLOAD_COWTRANSFER: true
   TZ: Asia/Shanghai
@@ -81,7 +77,7 @@ jobs:
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
-        ../scripts/preset-clash-core.sh armv8
+        ../scripts/preset-clash-core.sh armv7
 
     - name: Download Package
       id: package
@@ -139,15 +135,6 @@ jobs:
             sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
             sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
         fi
-        if "$IPV6MOD_IN_FIRMWARE" = 'true'
-        then
-            mkdir -p files/www/ipv6-modules
-            cp bin/packages/$PLATFORM/luci/luci-proto-ipv6* files/www/ipv6-modules
-            cp bin/packages/$PLATFORM/base/{ipv6helper*,odhcpd-ipv6only*,odhcp6c*,6in4*} "files/www/ipv6-modules"
-            cp bin/targets/$TARGET/$SUBTARGET/packages/{ip6tables*,kmod-nf-nat6*,kmod-ipt-nat6*,kmod-sit*,kmod-ip6tables-extra*} "files/www/ipv6-modules"
-            mkdir -p files/bin
-            cp ../scripts/ipv6-helper.sh files/bin/ipv6-helper
-        fi
         make package/install -j$(nproc) || make package/install -j1 V=s
         make target/install -j$(nproc) || make target/install -j1 V=s
         make checksum
@@ -163,22 +150,6 @@ jobs:
         cp -r server $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/pre-packages-server
         cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
         zip -q -r packages-server.zip pre-packages-server/server
-        
-    - name: Extract Gz Files
-      if: steps.generate.outputs.status == 'success'
-      run: |
-        cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-        gzip -qdc $DEVICE-squashfs-factory.img.gz > $DEVICE-squashfs-factory.img || true
-        gzip -qdc $DEVICE-squashfs-sysupgrade.img.gz > $DEVICE-squashfs-sysupgrade.img || true
-        gzip -qdc $DEVICE-ext4-factory.img.gz > $DEVICE-ext4-factory.img || true
-        gzip -qdc $DEVICE-ext4-sysupgrade.img.gz > $DEVICE-ext4-sysupgrade.img || true
-        
-    - name: Generate Sha256sum File For Images
-      if: steps.generate.outputs.status == 'success'
-      run: |
-        cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-        mv sha256sums sha256sums.orig
-        sha256sum *.img > sha256sums
         
     - name: Upload Config
       uses: actions/upload-artifact@main
@@ -200,41 +171,34 @@ jobs:
       with:
         name: ${{ env.DEVICE }}.manifest
         path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}.manifest
-        
+       
     - name: Upload RootFS Archive
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_ROOTFS == 'true'
+      if: steps.generate.outputs.status == 'success'
       with:
         name: ${{ env.DEVICE }}-rootfs.tar.gz
         path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-rootfs.tar.gz
         
     - name: Upload SquashFS Factory Image
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
+      if: steps.generate.outputs.status == 'success'
       with:
-        name: ${{ env.DEVICE }}-squashfs-factory.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-factory.img
+        name: ${{ env.DEVICE }}-squashfs-nand-factory.ubi
+        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-nand-factory.ubi
         
     - name: Upload SquashFS Sysupgrade Image
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
+      if: steps.generate.outputs.status == 'success'
       with:
-        name: ${{ env.DEVICE }}-squashfs-sysupgrade.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-sysupgrade.img
+        name: ${{ env.DEVICE }}-squashfs-nand-sysupgrade.bin
+        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-nand-sysupgrade.bin
         
-    - name: Upload Ext4 Factory Image
+    - name: Upload Fit uImage
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
+      if: steps.generate.outputs.status == 'success'
       with:
-        name: ${{ env.DEVICE }}-ext4-factory.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-factory.img
-        
-    - name: Upload Ext4 Sysupgrade Image
-      uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
-      with:
-        name: ${{ env.DEVICE }}-ext4-sysupgrade.img
-        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-sysupgrade.img
+        name: ${{ env.DEVICE }}-initramfs-fit-zImage.itb
+        path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-initramfs-fit-zImage.itb
 
     - name: Upload Images Sha256sums
       uses: actions/upload-artifact@main
@@ -250,8 +214,7 @@ jobs:
         cd $OPENWRTROOT
         zip -qr dl.zip dl
         cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-        rm -rf *.img packages pre-packages-server sha256sums
-        mv sha256sums.orig sha256sums
+        rm -rf packages pre-packages-server
         tree -L 1
         df -hT $PWD
         echo "::set-output name=status::success"

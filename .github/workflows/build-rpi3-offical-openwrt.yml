@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's OpenWrt
+name: Build Raspberry Pi 3 Offical OpenWrt
 
 on:
   repository_dispatch:
@@ -16,18 +16,18 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/rpi4-lean-openwrt.config'
+      - 'config/offical/rpi3-offical-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
 #    types: started
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/rpi4-lean-openwrt.config
-  DEVICE: openwrt-bcm27xx-bcm2711-rpi-4
-  DIY_SH: scripts/lean-openwrt.sh
+  CONFIG_FILE: config/offical/rpi3-offical-openwrt.config
+  DEVICE: openwrt-bcm27xx-bcm2710-rpi-3
+  DIY_SH: scripts/offical-openwrt.sh
   SSH_ACTIONS: false
   IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
@@ -67,6 +67,7 @@ jobs:
       run: |
         cd openwrt
         echo "::set-env name=OPENWRTROOT::$PWD"
+        # sed -i 's/luci.git/luci.git\;openwrt-19.07/g' feeds.conf.default
         ./scripts/feeds update -a
 
     - name: Install Feeds
@@ -82,6 +83,11 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv8
+        ../scripts/create-acl.sh
+        rm -f package/lean/helloworld/luci-app-ssr-plus/po/zh_Hans
+        ## If your device is Raspberrt Pi 4B:
+        # chmod +x ../scripts/enable-rpi4-wifi.sh
+        # ../scripts/enable-rpi4-wifi.sh
 
     - name: Download Package
       id: package
@@ -104,7 +110,7 @@ jobs:
         make tools/compile -j$(nproc) || make tools/compile -j1 V=s
         make toolchain/compile -j$(nproc) || make toolchain/compile -j1 V=s
         make target/compile -j$(nproc) || make target/compile -j1 V=s IGNORE_ERRORS=1
-        make diffconfig
+        make buildinfo
         make package/compile -j$(nproc) IGNORE_ERRORS=1 || make package/compile -j1 V=s IGNORE_ERRORS=1
         make package/index
         cd $OPENWRTROOT/bin/packages/*
@@ -129,12 +135,12 @@ jobs:
         then
             mkdir -p files/www/snapshots/targets
             cp -r bin/targets/$TARGET files/www/snapshots/targets
-            cp ../config/opkg/distfeeds-18.06-local.conf files/etc/opkg/distfeeds.conf
+            cp ../config/opkg/distfeeds-19.07-local.conf files/etc/opkg/distfeeds.conf
             sed -i "s/subtarget/$SUBTARGET/g" files/etc/opkg/distfeeds.conf
             sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
             sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
         else
-            cp ../config/opkg/distfeeds-18.06-remote.conf files/etc/opkg/distfeeds.conf
+            cp ../config/opkg/distfeeds-19.07-remote.conf files/etc/opkg/distfeeds.conf
             sed -i "s/subtarget/$SUBTARGET/g" files/etc/opkg/distfeeds.conf
             sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
             sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
