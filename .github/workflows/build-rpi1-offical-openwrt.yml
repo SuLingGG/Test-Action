@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/offical/rpi1-offical-openwrt.config'
+      - 'config/offical/rpi/rpi-offical-extra.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: master
-  CONFIG_FILE: config/offical/rpi1-offical-openwrt.config
+  CONFIG_FILE: config/offical/rpi/rpi1-offical-target.config
   DEVICE: openwrt-bcm27xx-bcm2708-rpi
   DIY_SH: scripts/offical-openwrt.sh
   SSH_ACTIONS: false
@@ -67,7 +67,7 @@ jobs:
       run: |
         cd openwrt
         echo "::set-env name=OPENWRTROOT::$PWD"
-        # sed -i 's/luci.git/luci.git\;openwrt-19.07/g' feeds.conf.default
+        sed -i 's/luci.git/luci.git\;openwrt-19.07/g' feeds.conf.default
         ./scripts/feeds update -a
 
     - name: Install Feeds
@@ -79,12 +79,13 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
+        cat config/offical/rpi/rpi-offical-extra >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv6
+        ../preset-terminal-tools.sh
         ../scripts/create-acl.sh -a
-        rm -f package/lean/helloworld/luci-app-ssr-plus/po/zh_Hans
         ## If your device is Raspberrt Pi 4B:
         # chmod +x ../scripts/enable-rpi4-wifi.sh
         # ../scripts/enable-rpi4-wifi.sh

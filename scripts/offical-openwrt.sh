@@ -29,6 +29,7 @@ svn co https://github.com/project-openwrt/openwrt/branches/master/package/lean/a
 
 # Add luci-app-ssr-plus
 git clone --depth=1 https://github.com/fw876/helloworld
+rm -rf helloworld/luci-app-ssr-plus/po/zh_Hans
 popd
 
 # Clean Lean's code
@@ -114,9 +115,6 @@ sed -i '/filter_aaaa/d;/commit dhcp/d' ../scripts/ipv6-helper.sh
 # Remove orig kcptun
 rm -rf ./feeds/packages/net/kcptun
 
-# Enable irqbalance
-sed -i 's/0/1/g' feeds/packages/utils/irqbalance/files/irqbalance.config
-
 # Max connections
 sed -i 's/16384/65536/g' package/kernel/linux/files/sysctl-nf-conntrack.conf
 
@@ -137,6 +135,9 @@ popd
 pushd package/kernel/mt76
 sed -i '/mt7662u_rom_patch.bin/a\\techo mt76-usb disable_usb_sg=1 > $\(1\)\/etc\/modules.d\/mt76-usb' Makefile
 popd
+
+# Change default shell to zsh
+sed -i 's/\/bin\/ash/\/usr\/bin\/zsh/g' package/base-files/files/etc/passwd
 
 # Convert Translation
 cp ../scripts/convert-translation.sh .

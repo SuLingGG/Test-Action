@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/x86_generic-lean-openwrt.config'
+      - 'config/lean/x86/x86-lean-extra.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/x86_generic-lean-openwrt.config
+  CONFIG_FILE: config/lean/x86/x86_64-lean-target.config
   DEVICE: openwrt-x86-generic-generic
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false
@@ -79,6 +79,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh 386
+        ../preset-terminal-tools.sh
 
     - name: Download Package
       id: package

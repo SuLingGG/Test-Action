@@ -12,9 +12,9 @@
 pushd package/lean
 git clone --depth=1 https://github.com/fw876/helloworld
 
-# Add Project OpenWrt's autocore
-rm -rf autocore
-svn co https://github.com/project-openwrt/openwrt/trunk/package/lean/autocore
+## Add Project OpenWrt's autocore
+# rm -rf autocore
+# svn co https://github.com/project-openwrt/openwrt/trunk/package/lean/autocore
 popd
 
 # Clone community packages to package/community
@@ -110,3 +110,6 @@ git clone https://github.com/openwrt-dev/po2lmo.git
 pushd po2lmo
 make && sudo make install
 popd
+
+# Change default shell to zsh
+sed -i 's/\/bin\/ash/\/usr\/bin\/zsh/g' package/base-files/files/etc/passwd
