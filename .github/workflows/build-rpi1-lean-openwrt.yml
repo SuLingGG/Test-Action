@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/rpi/rpi-lean-extra.config'
+      - 'config/lean/bcm27xx/rpi-lean-extra.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/rpi/rpi1-lean-target.config
+  CONFIG_FILE: config/lean/bcm27xx/rpi1-lean-target.config
   DEVICE: openwrt-bcm27xx-bcm2708-rpi
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false
@@ -78,7 +78,7 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
-        cat config/lean/rpi/rpi-lean-extra.config >> $OPENWRTROOT/.config
+        cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         mv patch/enable-autocore.diff $OPENWRTROOT
         cd $OPENWRTROOT

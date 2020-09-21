@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/project/gdock-project-openwrt.config'
+      - 'config/project/ipq40xx/gdock-project-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/project-openwrt/openwrt
   REPO_BRANCH: openwrt-18.06-k5.4
-  CONFIG_FILE: config/project/gdock-project-openwrt.config
+  CONFIG_FILE: config/project/ipq40xx/gdock-project-openwrt.config
   DEVICE: openwrt-ipq40xx-p2w_r619ac
   DIY_SH: scripts/project-openwrt.sh
   SSH_ACTIONS: false

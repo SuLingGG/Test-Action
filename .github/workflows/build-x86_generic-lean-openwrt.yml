@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/x86/x86_64-lean-target.config
+  CONFIG_FILE: config/lean/x86/x86_generic-lean-target.config
   DEVICE: openwrt-x86-generic-generic
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false
@@ -75,6 +75,7 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
+        cat config/lean/x86/x86-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH

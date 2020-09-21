@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/gdock-lean-openwrt.config'
+      - 'config/lean/ipq40xx/gdock-lean-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/gdock-lean-openwrt.config
+  CONFIG_FILE: config/lean/ipq40xx/gdock-lean-openwrt.config
   DEVICE: openwrt-ipq40xx-generic-p2w_r619ac-128m
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false

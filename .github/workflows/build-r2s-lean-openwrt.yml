@@ -16,7 +16,7 @@ on:
     branches:
       - main
     paths:
-      - 'config/lean/r2s-lean-openwrt.config'
+      - 'config/lean/rockchip/r2s-lean-openwrt.config'
   schedule:
     - cron: 0 18 * * *
 #  watch:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/r2s-lean-openwrt.config
+  CONFIG_FILE: config/lean/rockchip/r2s-lean-openwrt.config
   DEVICE: openwrt-rockchip-armv8-friendlyarm_nanopi-r2s
   DIY_SH: scripts/lean-openwrt.sh
   SSH_ACTIONS: false
