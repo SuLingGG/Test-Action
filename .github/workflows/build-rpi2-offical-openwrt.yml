@@ -79,12 +79,12 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
-        cat config/offical/rpi/rpi-offical-extra >> $OPENWRTROOT/.config
+        cat config/offical/rpi/rpi-offical-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv7
-        ../preset-terminal-tools.sh
+        ../scripts/preset-terminal-tools.sh
         ../scripts/create-acl.sh -a
         ## If your device is Raspberrt Pi 4B:
         # chmod +x ../scripts/enable-rpi4-wifi.sh

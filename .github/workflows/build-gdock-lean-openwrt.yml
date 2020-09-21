@@ -79,7 +79,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv7
-        ../preset-terminal-tools.sh
+        ../scripts/preset-terminal-tools.sh
         git apply enable-autocore.diff
 
     - name: Download Package
