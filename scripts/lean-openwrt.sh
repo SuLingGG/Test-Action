@@ -12,6 +12,9 @@
 pushd package/lean
 git clone --depth=1 https://github.com/fw876/helloworld
 
+# Remove node dependence for UnblockNeteaseMusic NodeJS version
+sed -i '/DEPENDS/d' UnblockNeteaseMusic/Makefile
+
 ## Add Project OpenWrt's autocore
 # rm -rf autocore
 # svn co https://github.com/project-openwrt/openwrt/trunk/package/lean/autocore
@@ -55,8 +58,8 @@ git clone --depth=1 https://github.com/lisaac/luci-lib-docker
 git clone --depth=1 https://github.com/project-openwrt/openwrt-gowebdav
 
 # Add luci-app-jd-dailybonus
-git clone --depth=1 https://github.com/jerrykuku/node-request
 git clone --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus
+sed -i 's/+node //g' luci-app-jd-dailybonus/Makefile
 
 # Add luci-theme-argon
 git clone --depth=1 -b 18.06 https://github.com/jerrykuku/luci-theme-argon

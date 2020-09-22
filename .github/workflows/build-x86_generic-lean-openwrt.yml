@@ -80,6 +80,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh 386
+        ../scripts/preset-node-binary.sh
         ../scripts/preset-terminal-tools.sh
 
     - name: Download Package

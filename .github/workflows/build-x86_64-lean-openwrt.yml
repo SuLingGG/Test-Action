@@ -80,6 +80,7 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh amd64
+        ../scripts/preset-node-binary.sh
         ../scripts/preset-terminal-tools.sh
 
     - name: SSH Connection To Actions
