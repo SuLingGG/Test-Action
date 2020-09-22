@@ -78,7 +78,6 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv7
-        ../scripts/preset-node-binary.sh
         ../scripts/preset-terminal-tools.sh
 
     - name: Download Package
@@ -137,6 +136,7 @@ jobs:
             sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
             sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
         fi
+        ../scripts/preset-node-binary.sh
         make package/install -j$(nproc) || make package/install -j1 V=s
         make target/install -j$(nproc) || make target/install -j1 V=s
         make checksum

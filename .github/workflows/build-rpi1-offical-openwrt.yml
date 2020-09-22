@@ -84,7 +84,6 @@ jobs:
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv6
-        ../scripts/preset-node-binary.sh
         ../scripts/preset-terminal-tools.sh
         ../scripts/create-acl.sh -a
         ## If your device is Raspberrt Pi 4B:
@@ -156,6 +155,7 @@ jobs:
             mkdir -p files/bin
             cp ../scripts/ipv6-helper.sh files/bin/ipv6-helper
         fi
+        ../scripts/preset-node-binary.sh
         make package/install -j$(nproc) || make package/install -j1 V=s
         make target/install -j$(nproc) || make target/install -j1 V=s
         make checksum
