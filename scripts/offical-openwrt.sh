@@ -34,6 +34,9 @@ rm -rf helloworld/luci-app-ssr-plus/po/zh_Hans
 # Remove node dependence for UnblockNeteaseMusic NodeJS version
 sed -i '/DEPENDS/d' UnblockNeteaseMusic/Makefile
 
+# Fix frp's hash
+sed -i 's/PKG_HASH.*/PKG_HASH:=3c4f354c7c82eb5001f0de5a55015acbaa1fba03aa97647a74131bc4118598a8/g' frp/Makefile
+
 popd
 
 # Clean Lean's code
