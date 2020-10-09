@@ -14,10 +14,6 @@ rm -rf package/ctcgfw/r8168
 # Mod zzz-default-settings
 sed -i "/commit luci/i\uci set luci.main.mediaurlbase='/luci-static/argon'" package/lean/default-settings/files/zzz-default-settings
 
-# Remove NodeJS dependence
-sed -i 's/+node //g' package/ctcgfw/luci-app-jd-dailybonus/Makefile
-sed -i 's/+node //g' package/lean/UnblockNeteaseMusic/Makefile
-
 # Add po2lmo
 git clone https://github.com/openwrt-dev/po2lmo.git
 pushd po2lmo

@@ -31,12 +31,6 @@ svn co https://github.com/project-openwrt/openwrt/branches/master/package/lean/a
 git clone --depth=1 https://github.com/fw876/helloworld
 rm -rf helloworld/luci-app-ssr-plus/po/zh_Hans
 
-# Remove node dependence for UnblockNeteaseMusic NodeJS version
-sed -i '/DEPENDS/d' UnblockNeteaseMusic/Makefile
-
-# Fix frp's hash
-sed -i 's/PKG_HASH.*/PKG_HASH:=3c4f354c7c82eb5001f0de5a55015acbaa1fba03aa97647a74131bc4118598a8/g' frp/Makefile
-
 popd
 
 # Clean Lean's code
@@ -82,7 +76,6 @@ git clone --depth=1 https://github.com/project-openwrt/openwrt-gowebdav
 
 # Add luci-app-jd-dailybonus
 git clone --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus
-sed -i 's/+node //g' luci-app-jd-dailybonus/Makefile
 
 # Add luci-theme-argon
 git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon
@@ -145,6 +138,12 @@ popd
 
 # Change default shell to zsh
 sed -i 's/\/bin\/ash/\/usr\/bin\/zsh/g' package/base-files/files/etc/passwd
+
+# Use Lean's golang to fix latest v2ray compile errors
+pushd feeds/packages/lang
+rm -rf golang
+svn co https://github.com/coolsnowwolf/packages/trunk/lang/golang
+popd
 
 # Convert Translation
 cp ../scripts/convert-translation.sh .
