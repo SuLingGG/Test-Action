@@ -10,6 +10,7 @@ name: Build G-Dock Lean's OpenWrt
 
 on:
   repository_dispatch:
+  workflow_dispatch:
   release:
     types: published
   push:
