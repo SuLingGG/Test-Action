@@ -10,15 +10,12 @@ name: Build NanoPi R2S Lean's OpenWrt
 
 on:
   repository_dispatch:
+    types: [lean, r2s]
+  workflow_dispatch:
   release:
     types: published
-  push:
-    branches:
-      - main
-    paths:
-      - 'config/lean/rockchip/r2s-lean-openwrt.config'
-#  schedule:
-#    - cron: 0 18 * * *
+  schedule:
+    - cron: 0 18 * * *
 #  watch:
 #    types: started
 
@@ -78,12 +75,10 @@ jobs:
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
         chmod +x scripts/*.sh
-        mv patch/enable-autocore.diff $OPENWRTROOT
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv8
         ../scripts/preset-terminal-tools.sh
-        git apply enable-autocore.diff
 
     - name: Download Package
       id: package

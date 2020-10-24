@@ -10,15 +10,12 @@ name: Build Raspberry Pi 1 Lean's OpenWrt
 
 on:
   repository_dispatch:
+    types: [lean, rpi1]
+  workflow_dispatch:
   release:
     types: published
-  push:
-    branches:
-      - main
-    paths:
-      - 'config/lean/bcm27xx/rpi-lean-extra.config'
-#  schedule:
-#    - cron: 0 18 * * *
+  schedule:
+    - cron: 0 18 * * *
 #  watch:
 #    types: started
 
@@ -79,12 +76,10 @@ jobs:
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
         cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
-        mv patch/enable-autocore.diff $OPENWRTROOT
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv6
         ../scripts/preset-terminal-tools.sh
-        git apply enable-autocore.diff
 
     - name: Download Package
       id: package
