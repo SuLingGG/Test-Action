@@ -12,10 +12,8 @@ on:
   repository_dispatch:
     types: [lean, gdock]
   workflow_dispatch:
-  release:
-    types: published
 #  schedule:
-# - cron: 0 18 * * *
+#    - cron: 0 18 * * *
 #  watch:
 #    types: started
 
@@ -230,6 +228,7 @@ jobs:
         echo "::set-output name=status::success"
 
     - name: Upload Firmware To CowTransfer
+      id: cowtransfer
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -238,6 +237,7 @@ jobs:
         echo "::set-output name=url::$(cat cowtransfer.log | grep https | cut -f3 -d" ")"
 
     - name: Upload Firmware To WeTransfer
+      id: wetransfer
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -276,12 +276,6 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
-
-    - name: Remove Old Artifacts
-      uses: c-hive/gha-remove-artifacts@v1.2.0
-      with:
-        age: '30 day'
-        skip-recent: 65
 
     - name: Remove Old Releases
       uses: dev-drprasad/delete-older-releases@v0.1.0
