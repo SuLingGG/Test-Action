@@ -268,11 +268,12 @@ jobs:
         echo "::set-output name=status::success"
 
     - name: Upload Firmware To Release
-      uses: softprops/action-gh-release@v1
+      uses: SuLingGG/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        repository: SuLingGG/OpenWrt-Release
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
