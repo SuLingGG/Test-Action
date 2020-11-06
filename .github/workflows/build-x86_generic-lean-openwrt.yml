@@ -25,7 +25,6 @@ env:
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
-  UPLOAD_RELEASE: true
   UPLOAD_COWTRANSFER: true
   UPLOAD_WETRANSFER: true
   TZ: Asia/Shanghai
@@ -117,21 +116,20 @@ jobs:
       if: steps.compile.outputs.status == 'success'
       id: generate
       run: |
+        cd config/opkg
+        sed -i "s/subtarget/$SUBTARGET/g" distfeeds*.conf
+        sed -i "s/target\//$TARGET\//g" distfeeds*.conf
+        sed -i "s/platform/$PLATFORM/g" distfeeds*.conf
         cd $OPENWRTROOT
         mkdir -p files/etc/opkg
+        cp ../config/opkg/distfeeds-packages-server.conf files/etc/opkg/distfeeds.conf.server
         if "$KMODS_IN_FIRMWARE" = 'true'
         then
-            mkdir -p files/www/snapshots/targets
-            cp -r bin/targets/$TARGET files/www/snapshots/targets
+            mkdir -p files/www/snapshots
+            cp -r bin/targets files/www/snapshots
             cp ../config/opkg/distfeeds-18.06-local.conf files/etc/opkg/distfeeds.conf
-            sed -i "s/subtarget/$SUBTARGET/g" files/etc/opkg/distfeeds.conf
-            sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
-            sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
         else
             cp ../config/opkg/distfeeds-18.06-remote.conf files/etc/opkg/distfeeds.conf
-            sed -i "s/subtarget/$SUBTARGET/g" files/etc/opkg/distfeeds.conf
-            sed -i "s/target\//$TARGET\//g" files/etc/opkg/distfeeds.conf
-            sed -i "s/platform/$PLATFORM/g" files/etc/opkg/distfeeds.conf
         fi
         if "$IPV6MOD_IN_FIRMWARE" = 'true'
         then
@@ -264,7 +262,6 @@ jobs:
         echo "::set-output name=status::success"
 
     - name: Upload Uefi Firmwares To Cowtransfer
-      id: cowtransfer-uefi
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET
@@ -272,7 +269,6 @@ jobs:
         echo "::warning file=Cowtransfer-UEFI=::$(cat cowtransfer-uefi.log | grep https)"
         
     - name: Upload Legacy Firmwares To Cowtransfer
-      id: cowtransfer-legacy
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -280,7 +276,6 @@ jobs:
         echo "::warning file=Cowtransfer-Legacy=::$(cat cowtransfer-legacy.log | grep https)"
         
     - name: Upload Other Files To Cowtransfer
-      id: cowtransfer-other
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -288,7 +283,6 @@ jobs:
         echo "::warning file=Cowtransfer-OtherFiles=::$(cat cowtransfer-other.log | grep https)"
         
     - name: Upload Uefi Firmwares To WeTransfer
-      id: wetransfer-uefi
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET
@@ -296,7 +290,6 @@ jobs:
         echo "::warning file=Wetransfer-UEFI=::$(cat wetransfer-uefi.log | grep https)"
         
     - name: Upload Legacy Firmwares To WeTransfer
-      id: wetransfer-legacy
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -304,7 +297,6 @@ jobs:
         echo "::warning file=Wetransfer-Legacy::$(cat wetransfer-legacy.log | grep https)"
         
     - name: Upload Other Files To WeTransfer
-      id: wetransfer-other
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true'
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -322,38 +314,4 @@ jobs:
       run: |
         cd $OPENWRTROOT/bin/targets/$TARGET/
         ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee wetransfer-dl.log
-
-    - name: Generate Release Tag
-      id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      run: |
-        echo "::set-output name=release_tag::x86_generic-Lean-OpenWrt_$(date +"%Y-%m-%d")"
-        touch release.txt
-        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer-UEFI](${{ steps.cowtransfer-uefi.outputs.url }})" >> release.txt
-        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer-Legacy](${{ steps.cowtransfer-legacy.outputs.url }})" >> release.txt
-        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer-Other](${{ steps.cowtransfer-other.outputs.url }})" >> release.txt
-        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer-UEFI](${{ steps.wetransfer-uefi.outputs.url }})" >> release.txt
-        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer-Legacy](${{ steps.wetransfer-legacy.outputs.url }})" >> release.txt
-        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer-Other](${{ steps.wetransfer-other.outputs.url }})" >> release.txt
-        echo "::set-output name=status::success"
-
-    - name: Upload Firmware To Release
-      uses: SuLingGG/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        repository: SuLingGG/OpenWrt-Release
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
-
-    - name: Remove Old Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        keep_latest: 65
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

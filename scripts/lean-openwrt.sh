@@ -20,9 +20,16 @@ pushd package/community
 # Add Lienol's Packages
 git clone --depth=1 https://github.com/Lienol/openwrt-package
 
-# Add mentohust & luci-app-mentohust.
+# Add luci-app-vssr <M>
+git clone --depth=1 https://github.com/jerrykuku/luci-app-vssr
+
+# Add mentohust & luci-app-mentohust
 git clone --depth=1 https://github.com/BoringCat/luci-app-mentohust
 git clone --depth=1 https://github.com/KyleRicardo/MentoHUST-OpenWrt-ipk
+
+# Add minieap & luci-proto-minieap
+git clone --depth=1 https://github.com/ysc3839/luci-proto-minieap
+svn co https://github.com/project-openwrt/openwrt/trunk/package/ntlf9t/minieap
 
 # Add ServerChan
 git clone --depth=1 https://github.com/tty228/luci-app-serverchan
@@ -93,12 +100,24 @@ rm -rf libssh
 svn co https://github.com/openwrt/packages/trunk/libs/libssh
 popd
 
-## Fix mt76 wireless driver
-# pushd package/kernel/mt76
-# rm -f Makefile
-# wget https://raw.githubusercontent.com/openwrt/openwrt/e12ac405525c29a6b6195e6259d769715919560c/package/kernel/mt76/Makefile
-# sed -i '/mt7662u_rom_patch.bin/a\\techo mt76-usb disable_usb_sg=1 > $\(1\)\/etc\/modules.d\/mt76-usb' Makefile
-# popd
+# Use Lienol's https-dns-proxy package
+pushd feeds/packages/net
+rm -rf https-dns-proxy
+svn co https://github.com/Lienol/openwrt-packages/trunk/net/https-dns-proxy
+popd
+
+# Use snapshots syncthing package
+pushd feeds/packages/utils
+rm -rf syncthing
+svn co https://github.com/openwrt/packages/trunk/utils/syncthing
+popd
+
+# Fix mt76 wireless driver
+pushd package/kernel/mt76
+rm -f Makefile
+wget https://raw.githubusercontent.com/openwrt/openwrt/master/package/kernel/mt76/Makefile
+sed -i '/mt7662u_rom_patch.bin/a\\techo mt76-usb disable_usb_sg=1 > $\(1\)\/etc\/modules.d\/mt76-usb' Makefile
+popd
 
 # Add po2lmo
 git clone https://github.com/openwrt-dev/po2lmo.git
