@@ -20,7 +20,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/ipq40xx/gdock-lean-openwrt.config
+  CONFIG_FILE: config/lean/ipq40xx/gdock-lean-openwrt-minimal.config
   DEVICE: openwrt-ipq40xx-generic-p2w_r619ac-128m
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: true
@@ -30,7 +30,7 @@ env:
   TZ: Asia/Shanghai
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-18.04
     if: github.event.repository.owner.id == github.event.sender.id
 
@@ -150,9 +150,16 @@ jobs:
       with:
         name: bin-archive
         path: openwrt/bin
+        
+    - name: Upload DL Folder Archive
+      uses: actions/upload-artifact@main
+      if: steps.generate.outputs.status == 'success'
+      with:
+        name: dl-archive
+        path: openwrt/dl
 
-  upload:
-    needs: [build]
+  Upload:
+    needs: [Build]
     runs-on: ubuntu-18.04
     steps:
       - name: Configure Rclone
@@ -165,17 +172,23 @@ jobs:
           $RCLONE_CONFIG
           EOF
           
-      - name: Download Artifacts
+      - name: Download Bin Folder Archive
         uses: actions/download-artifact@v2
         with:
           name: bin-archive
+          path: openwrt
+          
+      - name: Download DL Folder Archive
+        uses: actions/download-artifact@v2
+        with:
+          name: dl-archive
           path: openwrt
 
       - name: Upload Targets File To Rclone
         run: |
           cd openwrt
           echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
-          unzip -qo bin-archive.zip
+          unzip -qo bin-archive
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
       
       - name: Deploy Packages-Server
@@ -249,8 +262,6 @@ jobs:
         id: organize
         if: steps.generate.outputs.status == 'success' && !cancelled()
         run: |
-          cd $OPENWRTROOT
-          zip -qr DL.zip dl
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           rm -rf packages pre-packages-server
           tree -L 1
@@ -262,6 +273,7 @@ jobs:
       - name: Upload Firmware To CowTransfer
         if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
         run: |
+          mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
