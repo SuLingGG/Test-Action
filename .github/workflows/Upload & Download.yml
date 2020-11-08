@@ -14,13 +14,12 @@ jobs:
         echo 123 > 123.txt
         echo 1234 > 1234.txt
         echo 12345 > 12345.txt
-        cd .. && zip -qr 123test.zip test
     
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: my-artifact
-        path: 123test.zip
+        path: test
 
   Download:
     needs: [Upload]
