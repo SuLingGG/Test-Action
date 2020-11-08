@@ -147,28 +147,41 @@ jobs:
         make checksum
         echo "::set-output name=status::success"
 
+    - name: Compress Folders
+      run: |
+        cd openwrt
+        zip -qr bin-archive.zip bin
+        zip -qr dl-archive.zip dl
+
     - name: Upload Bin Folder Archive
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.status == 'success'
       with:
         name: bin-archive
-        path: openwrt/bin
+        path: openwrt/bin-archive.zip
         
     - name: Upload DL Folder Archive
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.status == 'success'
       with:
         name: dl-archive
-        path: openwrt/dl
+        path: openwrt/dl-archive.zip
 
   Upload:
     needs: [Build]
     runs-on: ubuntu-18.04
     steps:
+
+      - name: Checkout
+        uses: actions/checkout@main
+
       - name: Configure Rclone
         env:
           RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
         run: |
+          mkdir openwrt
+          cd openwrt
+          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
           curl https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone/
           cat << EOF > ~/.config/rclone/rclone.conf
@@ -191,7 +204,8 @@ jobs:
         run: |
           cd openwrt
           echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
-          unzip -qo bin-archive
+          unzip -qo bin-archive.zip
+          rm -f bin-archive.zip
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
 
       - name: Deploy Packages-Server
