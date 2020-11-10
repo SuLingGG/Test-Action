@@ -172,7 +172,6 @@ jobs:
     needs: [Build]
     
     runs-on: ubuntu-18.04
-    if: env.GENERATE == 'success'
     
     steps:
       - name: Checkout
