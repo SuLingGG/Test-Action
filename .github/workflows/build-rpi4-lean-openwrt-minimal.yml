@@ -269,21 +269,21 @@ jobs:
           
       - name: Upload SquashFS Sysupgrade Image
         uses: actions/upload-artifact@main
-        if: && env.UPLOAD_SQUASHFS_IMAGES == 'true'
+        if: env.UPLOAD_SQUASHFS_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-squashfs-sysupgrade.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-sysupgrade.img
           
       - name: Upload Ext4 Factory Image
         uses: actions/upload-artifact@main
-        if: && env.UPLOAD_EXT4_IMAGES == 'true'
+        if: env.UPLOAD_EXT4_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-ext4-factory.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-factory.img
           
       - name: Upload Ext4 Sysupgrade Image
         uses: actions/upload-artifact@main
-        if: && env.UPLOAD_EXT4_IMAGES == 'true'
+        if: env.UPLOAD_EXT4_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-ext4-sysupgrade.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-sysupgrade.img
