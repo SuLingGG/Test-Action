@@ -146,6 +146,7 @@ jobs:
         make target/install -j$(nproc) || make target/install -j1 V=s
         make checksum
         echo "::set-output name=status::success"
+        echo "GENERATE=success" >> $GITHUB_ENV
 
     - name: Compress Folders
       run: |
@@ -169,9 +170,11 @@ jobs:
 
   Upload:
     needs: [Build]
+    
     runs-on: ubuntu-18.04
+    if: env.GENERATE == 'success'
+    
     steps:
-
       - name: Checkout
         uses: actions/checkout@main
 
@@ -209,7 +212,6 @@ jobs:
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
 
       - name: Deploy Packages-Server
-        if: steps.generate.outputs.status == 'success'
         run: |
           mkdir -p server/web/snapshots/targets/$TARGET/$SUBTARGET
           cp -r $OPENWRTROOT/bin/packages server/web/snapshots
@@ -220,7 +222,6 @@ jobs:
           zip -q -r packages-server.zip pre-packages-server/server
           
       - name: Extract Gz Files
-        if: steps.generate.outputs.status == 'success'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           gzip -qdc $DEVICE-squashfs-factory.img.gz > $DEVICE-squashfs-factory.img || true
@@ -229,7 +230,6 @@ jobs:
           gzip -qdc $DEVICE-ext4-sysupgrade.img.gz > $DEVICE-ext4-sysupgrade.img || true
           
       - name: Generate Sha256sum File For Images
-        if: steps.generate.outputs.status == 'success'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           mv sha256sums sha256sums.orig
@@ -237,70 +237,65 @@ jobs:
           
       - name: Upload Config
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success'
         with:
           name: config.buildinfo
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/config.buildinfo
           
       - name: Upload Packages-Server
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success'
         with:
           name: packages-server
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/pre-packages-server
           
       - name: Upload Packages Info
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success'
         with:
           name: ${{ env.DEVICE }}.manifest
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}.manifest
           
       - name: Upload RootFS Archive
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success' && env.UPLOAD_ROOTFS == 'true'
+        if: env.UPLOAD_ROOTFS == 'true'
         with:
           name: ${{ env.DEVICE }}-rootfs.tar.gz
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-rootfs.tar.gz
           
       - name: Upload SquashFS Factory Image
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
+        if: env.UPLOAD_SQUASHFS_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-squashfs-factory.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-factory.img
           
       - name: Upload SquashFS Sysupgrade Image
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
+        if: && env.UPLOAD_SQUASHFS_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-squashfs-sysupgrade.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-sysupgrade.img
           
       - name: Upload Ext4 Factory Image
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
+        if: && env.UPLOAD_EXT4_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-ext4-factory.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-factory.img
           
       - name: Upload Ext4 Sysupgrade Image
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
+        if: && env.UPLOAD_EXT4_IMAGES == 'true'
         with:
           name: ${{ env.DEVICE }}-ext4-sysupgrade.img
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-sysupgrade.img
 
       - name: Upload Images Sha256sums
         uses: actions/upload-artifact@main
-        if: steps.generate.outputs.status == 'success'
         with:
           name: sha256sums
           path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/sha256sums
 
       - name: Organize Files
         id: organize
-        if: steps.generate.outputs.status == 'success' && !cancelled()
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           rm -rf *.img packages pre-packages-server sha256sums
@@ -312,7 +307,6 @@ jobs:
           echo "::set-output name=status::success"
 
       - name: Upload Firmware To CowTransfer
-        if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
         run: |
           mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -320,20 +314,17 @@ jobs:
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
 
       - name: Upload Firmware To WeTransfer
-        if: steps.organize.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
           echo "::warning file=Firmware-Wetransfer.com::$(cat wetransfer.log | grep https)"
 
       - name: Upload DL To CowTransfer
-        if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee cowtransfer-dl.log
           
       - name: Upload DL To WeTransfer
-        if: steps.organize.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee wetransfer-dl.log
