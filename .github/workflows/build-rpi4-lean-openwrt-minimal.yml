@@ -35,8 +35,8 @@ env:
 
 jobs:
   Build:
-    #runs-on: ubuntu-18.04
-    runs-on: self-hosted
+    runs-on: ubuntu-18.04
+    #runs-on: self-hosted
 
     outputs:
       OPENWRTROOT: ${{ steps.update.outputs.OPENWRTROOT }}
@@ -185,8 +185,8 @@ jobs:
   Upload:
     needs: [Build]
     
-    #runs-on: ubuntu-18.04
-    runs-on: self-hosted
+    runs-on: ubuntu-18.04
+    #runs-on: self-hosted
 
     steps:
       - name: Checkout
