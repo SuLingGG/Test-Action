@@ -191,11 +191,18 @@ jobs:
         
       - name: Restore Variables
         run: |
+<<<<<<< HEAD
           echo "OPENWRTROOT=$(echo '${{needs.Build.outputs.OPENWRTROOT}}')" >> $GITHUB_ENV
           echo "PLATFORM=$(echo '${{needs.Build.outputs.PLATFORM}}')" >> $GITHUB_ENV
           echo "TARGET=$(echo '${{needs.Build.outputs.TARGET}}')" >> $GITHUB_ENV
           echo "SUBTARGET=$(echo '${{needs.Build.outputs.SUBTARGET}}')" >> $GITHUB_ENV
           echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
+=======
+          echo "PLATFORM=$(echo '${{ jobs.Build.steps.generate.outputs.PLATFORM }}')" >> $GITHUB_ENV
+          echo "TARGET=$(echo '${{ jobs.Build.steps.generate.outputs.TARGET }}')" >> $GITHUB_ENV
+          echo "SUBTARGET=$(echo '${{ jobs.Build.steps.generate.outputs.SUBTARGET }}')" >> $GITHUB_ENV
+          echo "FIRMWARE=$(echo '${{ jobs.Build.steps.generate.outputs.FIRMWARE }}')" >> $GITHUB_ENV
+>>>>>>> 297cc42eb6e30adc2756519364f63fabb375a518
         
       - name: Configure Rclone
         env:
