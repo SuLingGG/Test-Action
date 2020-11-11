@@ -37,6 +37,13 @@ jobs:
   Build:
     runs-on: ubuntu-18.04
 
+    outputs:
+      OPENWRTROOT: ${{ steps.update.outputs.OPENWRTROOT }}
+      PLATFORM: ${{ steps.generate.outputs.PLATFORM }}
+      TARGET: ${{ steps.generate.outputs.TARGET }}
+      SUBTARGET: ${{ steps.generate.outputs.SUBTARGET }}
+      FIRMWARE: ${{ steps.generate.outputs.FIRMWARE }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@main
@@ -184,11 +191,11 @@ jobs:
         
       - name: Restore Variables
         run: |
-          echo "OPENWRTROOT=$(echo '${{ jobs.Build.steps.update.outputs.OPENWRTROOT }}')" >> $GITHUB_ENV
-          echo "PLATFORM=$(echo '${{ jobs.Build.steps.generate.outputs.PLATFORM }}')" >> $GITHUB_ENV
-          echo "TARGET=$(echo '${{ jobs.Build.steps.generate.outputs.TARGET }}')" >> $GITHUB_ENV
-          echo "SUBTARGET=$(echo '${{ jobs.Build.steps.generate.outputs.SUBTARGET }}')" >> $GITHUB_ENV
-          echo "FIRMWARE=$(echo '${{ jobs.Build.steps.generate.outputs.FIRMWARE }}')" >> $GITHUB_ENV
+          echo "OPENWRTROOT=$(echo '${{needs.Build.outputs.OPENWRTROOT}}')" >> $GITHUB_ENV
+          echo "PLATFORM=$(echo '${{needs.Build.outputs.PLATFORM}}')" >> $GITHUB_ENV
+          echo "TARGET=$(echo '${{needs.Build.outputs.TARGET}}')" >> $GITHUB_ENV
+          echo "SUBTARGET=$(echo '${{needs.Build.outputs.SUBTARGET}}')" >> $GITHUB_ENV
+          echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
         
       - name: Configure Rclone
         env:
