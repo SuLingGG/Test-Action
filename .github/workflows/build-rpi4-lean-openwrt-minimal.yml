@@ -58,9 +58,11 @@ jobs:
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
     - name: Update Feeds
+      id: update
       run: |
         cd openwrt
         echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+        echo "::set-output name=OPENWRTROOT::$(echo $PWD)"
         ./scripts/feeds update -a
 
     - name: Install Feeds
@@ -105,13 +107,17 @@ jobs:
         cd $OPENWRTROOT/bin/packages/*
         PLATFORM=$(basename `pwd`)
         echo "PLATFORM=$PLATFORM" >> $GITHUB_ENV
+        echo "::set-output name=PLATFORM::$(echo $PLATFORM)"
         cd $OPENWRTROOT/bin/targets/*
         TARGET=$(basename `pwd`)
         echo "TARGET=$TARGET" >> $GITHUB_ENV
+        echo "::set-output name=TARGET::$(echo $TARGET)"
         cd *
         SUBTARGET=$(basename `pwd`)
         echo "SUBTARGET=$SUBTARGET" >> $GITHUB_ENV
+        echo "::set-output name=SUBTARGET::$(echo $SUBTARGET)"
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "::set-output name=FIRMWARE::$(echo $FIRMWARE)"
         echo "::set-output name=COMPILE_STATUS::success"
 
     - name: Generate Firmware
@@ -146,21 +152,6 @@ jobs:
         make target/install -j$(nproc) || make target/install -j1 V=s
         make checksum
         echo "::set-output name=GENERATE_STATUS::success"
-        echo "GENERATE_STATUS=success" >> $GITHUB_ENV
-
-    - name: Store Variables
-      uses: nick-invision/persist-action-data@v1
-      with:
-        data: ${{ env.OPENWRTROOT }}
-        variable: OPENWRTROOT
-        data: ${{ env.TARGET }}
-        variable: TARGET
-        data: ${{ env.SUBTARGET }}
-        variable: SUBTARGET
-        data: ${{ env.FIRMWARE }}
-        variable: FIRMWARE
-        data: ${{ env.GENERATE_STATUS }}
-        variable: GENERATE_STATUS
 
     - name: Compress Folders
       run: |
@@ -170,14 +161,14 @@ jobs:
 
     - name: Upload Bin Folder Archive
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success'
+      if: steps.generate.outputs.GENERATE_STATUS == 'success'
       with:
         name: bin-archive
         path: openwrt/bin-archive.zip
         
     - name: Upload DL Folder Archive
       uses: actions/upload-artifact@main
-      if: steps.generate.outputs.status == 'success'
+      if: steps.generate.outputs.GENERATE_STATUS == 'success'
       with:
         name: dl-archive
         path: openwrt/dl-archive.zip
@@ -191,10 +182,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
         
-      - name: Retrieve Variables
-        uses: nick-invision/persist-action-data@v1
-        with:
-          retrieve_variables: OPENWRTROOT, TARGET, SUBTARGET, FIRMWARE, GENERATE_STATUS
+      - name: Restore Variables
+        run: |
+        echo "OPENWRTROOT=${{ jobs.Build.steps.update.outputs.OPENWRTROOT }}" >> $GITHUB_ENV
+        echo "PLATFORM=${{ jobs.Build.steps.generate.outputs.PLATFORM }}" >> $GITHUB_ENV
+        echo "TARGET=${{ jobs.Build.steps.generate.outputs.TARGET }}" >> $GITHUB_ENV
+        echo "SUBTARGET=${{ jobs.Build.steps.generate.outputs.SUBTARGET }}" >> $GITHUB_ENV
+        echo "FIRMWARE=${{ jobs.Build.steps.generate.outputs.FIRMWARE }}" >> $GITHUB_ENV
         
       - name: Configure Rclone
         env:
@@ -203,7 +197,6 @@ jobs:
         run: |
           mkdir openwrt
           cd openwrt
-          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
           curl https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone/
           cat << EOF > ~/.config/rclone/rclone.conf
@@ -228,7 +221,6 @@ jobs:
         if: env.GENERATE_STATUS == 'success'
         run: |
           cd openwrt
-          echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
           unzip -qo bin-archive.zip
           rm -f bin-archive.zip
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
@@ -334,10 +326,10 @@ jobs:
           cd $OPENWRTROOT/bin/targets/$TARGET/
           curl -fsSL git.io/file-transfer | sh
           df -hT $PWD
-          echo "::set-output name=status::success"
+          echo "::set-output name=ORGANIZE_STATUS::success"
 
       - name: Upload Firmware To CowTransfer
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
+        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
         run: |
           mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -345,20 +337,20 @@ jobs:
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
 
       - name: Upload Firmware To WeTransfer
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_WETRANSFER == 'true'
+        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_WETRANSFER == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
           echo "::warning file=Firmware-Wetransfer.com::$(cat wetransfer.log | grep https)"
 
       - name: Upload DL To CowTransfer
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_DL == 'true'
+        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee cowtransfer-dl.log
           
       - name: Upload DL To WeTransfer
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_DL == 'true'
+        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee wetransfer-dl.log
