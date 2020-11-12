@@ -20,7 +20,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/bcm27xx/rpi3-lean-openwrt-minimal.config
+  CONFIG_FILE: config/lean/bcm27xx/rpi3-lean-target.config
   DEVICE: openwrt-bcm27xx-bcm2710-rpi-3
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: false
@@ -83,6 +83,7 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
+        cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
@@ -339,7 +340,7 @@ jobs:
           echo "::set-output name=ORGANIZE_STATUS::success"
 
       - name: Upload Firmware To CowTransfer
-        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
+        if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
         run: |
           mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
@@ -347,20 +348,20 @@ jobs:
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
 
       - name: Upload Firmware To WeTransfer
-        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_WETRANSFER == 'true'
+        if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_WETRANSFER == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
           echo "::warning file=Firmware-Wetransfer.com::$(cat wetransfer.log | grep https)"
 
       - name: Upload DL To CowTransfer
-        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
+        if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee cowtransfer-dl.log
           
       - name: Upload DL To WeTransfer
-        if: env.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
+        if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee wetransfer-dl.log
