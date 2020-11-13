@@ -18,7 +18,7 @@ on:
 #    types: started
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_URL: https://github.com/SuLingGG/lede
   REPO_BRANCH: master
   CONFIG_FILE: config/lean/bcm27xx/rpi4-lean-target.config
   DEVICE: openwrt-bcm27xx-bcm2711-rpi-4
@@ -342,7 +342,6 @@ jobs:
       - name: Upload Firmware To CowTransfer
         if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
         run: |
-          mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
@@ -358,11 +357,11 @@ jobs:
         if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
-          ./transfer cow --block 2621440 -s -p 64 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee cowtransfer-dl.log
+          ./transfer cow --block 2621440 -s -p 64 --no-progress ${OPENWRTROOT}/dl-archive.zip 2>&1 | tee cowtransfer-dl.log
           
       - name: Upload DL To WeTransfer
         if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_DL == 'true'
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
-          ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/DL.zip 2>&1 | tee wetransfer-dl.log
+          ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/dl-archive.zip 2>&1 | tee wetransfer-dl.log
 
