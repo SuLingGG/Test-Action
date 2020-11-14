@@ -286,7 +286,7 @@ jobs:
           ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/dl-archive.zip 2>&1 | tee wetransfer-dl.log
 
       - name: Delete Artifacts
-      - uses: geekyeggo/delete-artifact@v1
+        uses: geekyeggo/delete-artifact@v1
         with:
           name: |
             bin-archive
