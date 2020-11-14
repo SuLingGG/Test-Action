@@ -18,17 +18,14 @@ on:
 #    types: started
 
 env:
-  REPO_URL: https://github.com/SuLingGG/lede
+  REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/bcm27xx/rpi3-lean-target.config
-  DEVICE: openwrt-bcm27xx-bcm2710-rpi-3
+  CONFIG_FILE: config/lean/bcm27xx/rpi3-lean-openwrt-minimal.config
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: false
-  KMODS_IN_FIRMWARE: true
-  UPLOAD_EXT4_IMAGES: true
-  UPLOAD_SQUASHFS_IMAGES: true
-  UPLOAD_ROOTFS: true
+  KMODS_IN_FIRMWARE: false
   UPLOAD_DL: true
+  UPLOAD_RCLONE: true
   UPLOAD_WETRANSFER: true
   UPLOAD_COWTRANSFER: true
   TZ: Asia/Shanghai
@@ -36,7 +33,6 @@ env:
 jobs:
   Build:
     runs-on: ubuntu-18.04
-    #runs-on: self-hosted
 
     outputs:
       OPENWRTROOT: ${{ steps.update.outputs.OPENWRTROOT }}
@@ -83,7 +79,6 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
-        cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
@@ -185,9 +180,7 @@ jobs:
 
   Upload:
     needs: [Build]
-    
     runs-on: ubuntu-18.04
-    #runs-on: self-hosted
 
     steps:
       - name: Checkout
@@ -202,19 +195,6 @@ jobs:
           echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
           echo "GENERATE_STATUS=$(echo '${{needs.Build.outputs.GENERATE_STATUS}}')" >> $GITHUB_ENV
         
-      - name: Configure Rclone
-        env:
-          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-        if: env.GENERATE_STATUS == 'success'
-        run: |
-          mkdir openwrt
-          cd openwrt
-          curl https://rclone.org/install.sh | sudo bash
-          mkdir -p ~/.config/rclone/
-          cat << EOF > ~/.config/rclone/rclone.conf
-          $RCLONE_CONFIG
-          EOF
-          
       - name: Download Bin Folder Archive
         uses: actions/download-artifact@v2
         if: env.GENERATE_STATUS == 'success'
@@ -229,10 +209,30 @@ jobs:
           name: dl-archive
           path: openwrt
 
-      - name: Upload Targets File To Rclone
+      - name: Decompress Bin Folder Archive
         if: env.GENERATE_STATUS == 'success'
         run: |
+          cd $OPENWRTROOT
+          unzip -qo bin-archive.zip
+          rm -f bin-archive.zip
+
+      - name: Configure Rclone
+        env:
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
+        run: |
+          mkdir openwrt
           cd openwrt
+          curl https://rclone.org/install.sh | sudo bash
+          mkdir -p ~/.config/rclone/
+          cat << EOF > ~/.config/rclone/rclone.conf
+          $RCLONE_CONFIG
+          EOF
+
+      - name: Upload Targets File To Rclone
+        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
+        run: |
+          cd $OPENWRTROOT
           unzip -qo bin-archive.zip
           rm -f bin-archive.zip
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
@@ -243,97 +243,15 @@ jobs:
           mkdir -p server/web/snapshots/targets/$TARGET/$SUBTARGET
           cp -r $OPENWRTROOT/bin/packages server/web/snapshots
           cp -r $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages server/web/snapshots/targets/$TARGET/$SUBTARGET
-          mkdir -p $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/pre-packages-server
-          cp -r server $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/pre-packages-server
+          mkdir -p $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
+          cp -r server/* $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-          zip -q -r packages-server.zip pre-packages-server/server
+          zip -qr packages-server.zip packages-server
           
-      - name: Extract Gz Files
-        if: env.GENERATE_STATUS == 'success'
-        run: |
-          cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-          gzip -qdc $DEVICE-squashfs-factory.img.gz > $DEVICE-squashfs-factory.img || true
-          gzip -qdc $DEVICE-squashfs-sysupgrade.img.gz > $DEVICE-squashfs-sysupgrade.img || true
-          gzip -qdc $DEVICE-ext4-factory.img.gz > $DEVICE-ext4-factory.img || true
-          gzip -qdc $DEVICE-ext4-sysupgrade.img.gz > $DEVICE-ext4-sysupgrade.img || true
-          
-      - name: Generate Sha256sum File For Images
-        if: env.GENERATE_STATUS == 'success'
-        run: |
-          cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-          mv sha256sums sha256sums.orig
-          sha256sum *.img > sha256sums
-          
-      - name: Upload Config
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success'
-        with:
-          name: config.buildinfo
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/config.buildinfo
-          
-      - name: Upload Packages-Server
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success'
-        with:
-          name: packages-server
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/pre-packages-server
-          
-      - name: Upload Packages Info
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success'
-        with:
-          name: ${{ env.DEVICE }}.manifest
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}.manifest
-          
-      - name: Upload RootFS Archive
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_ROOTFS == 'true'
-        with:
-          name: ${{ env.DEVICE }}-rootfs.tar.gz
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-rootfs.tar.gz
-          
-      - name: Upload SquashFS Factory Image
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
-        with:
-          name: ${{ env.DEVICE }}-squashfs-factory.img
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-factory.img
-          
-      - name: Upload SquashFS Sysupgrade Image
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_SQUASHFS_IMAGES == 'true'
-        with:
-          name: ${{ env.DEVICE }}-squashfs-sysupgrade.img
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-squashfs-sysupgrade.img
-          
-      - name: Upload Ext4 Factory Image
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
-        with:
-          name: ${{ env.DEVICE }}-ext4-factory.img
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-factory.img
-          
-      - name: Upload Ext4 Sysupgrade Image
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_EXT4_IMAGES == 'true'
-        with:
-          name: ${{ env.DEVICE }}-ext4-sysupgrade.img
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.DEVICE }}-ext4-sysupgrade.img
-
-      - name: Upload Images Sha256sums
-        uses: actions/upload-artifact@main
-        if: env.GENERATE_STATUS == 'success'
-        with:
-          name: sha256sums
-          path: openwrt/bin/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/sha256sums
-
       - name: Organize Files
         id: organize
         if: env.GENERATE_STATUS == 'success'
         run: |
-          cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-          rm -rf *.img packages pre-packages-server sha256sums
-          mv sha256sums.orig sha256sums
           cd $OPENWRTROOT/bin/targets/$TARGET/
           curl -fsSL git.io/file-transfer | sh
           df -hT $PWD
@@ -342,7 +260,6 @@ jobs:
       - name: Upload Firmware To CowTransfer
         if: steps.organize.outputs.ORGANIZE_STATUS == 'success' && env.UPLOAD_COWTRANSFER == 'true'
         run: |
-          mv $OPENWRTROOT/dl-archive $OPENWRTROOT/DL.zip
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
           echo "::warning file=Firmware-Cowtransfer.com::$(cat cowtransfer.log | grep https)"
@@ -365,4 +282,10 @@ jobs:
         run: |
           cd $OPENWRTROOT/bin/targets/$TARGET/
           ./transfer wet -s -p 16 --no-progress ${OPENWRTROOT}/dl-archive.zip 2>&1 | tee wetransfer-dl.log
-
+      
+      - name: Delete Artifacts
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            bin-archive
+            dl-archive

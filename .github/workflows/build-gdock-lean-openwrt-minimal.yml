@@ -6,11 +6,11 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's Minimal OpenWrt
+name: Build G-Dock Lean's Minimal OpenWrt
 
 on:
   repository_dispatch:
-    types: [lean, rpi4]
+    types: [lean, gdock]
   workflow_dispatch:
 #  schedule:
 #    - cron: 0 18 * * *
@@ -20,7 +20,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/bcm27xx/rpi4-lean-openwrt-minimal.config
+  CONFIG_FILE: config/lean/ipq40xx/gdock-lean-openwrt-minimal.config
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: false
   KMODS_IN_FIRMWARE: false
@@ -82,7 +82,7 @@ jobs:
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
-        ../scripts/preset-clash-core.sh armv8
+        ../scripts/preset-clash-core.sh armv7
         ../scripts/preset-terminal-tools.sh
 
     - name: Download Package
@@ -194,7 +194,7 @@ jobs:
           echo "SUBTARGET=$(echo '${{needs.Build.outputs.SUBTARGET}}')" >> $GITHUB_ENV
           echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
           echo "GENERATE_STATUS=$(echo '${{needs.Build.outputs.GENERATE_STATUS}}')" >> $GITHUB_ENV
-          
+        
       - name: Download Bin Folder Archive
         uses: actions/download-artifact@v2
         if: env.GENERATE_STATUS == 'success'

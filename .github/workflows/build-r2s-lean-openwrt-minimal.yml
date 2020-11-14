@@ -6,11 +6,11 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's Minimal OpenWrt
+name: Build NanoPi R2S Lean's Minimal OpenWrt
 
 on:
   repository_dispatch:
-    types: [lean, rpi4]
+    types: [lean, r2s]
   workflow_dispatch:
 #  schedule:
 #    - cron: 0 18 * * *
@@ -20,7 +20,7 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/bcm27xx/rpi4-lean-openwrt-minimal.config
+  CONFIG_FILE: config/lean/rockchip/r2s-lean-openwrt.config
   DIY_SH: scripts/lean-openwrt.sh
   IPV6MOD_IN_FIRMWARE: false
   KMODS_IN_FIRMWARE: false
@@ -194,7 +194,7 @@ jobs:
           echo "SUBTARGET=$(echo '${{needs.Build.outputs.SUBTARGET}}')" >> $GITHUB_ENV
           echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
           echo "GENERATE_STATUS=$(echo '${{needs.Build.outputs.GENERATE_STATUS}}')" >> $GITHUB_ENV
-          
+        
       - name: Download Bin Folder Archive
         uses: actions/download-artifact@v2
         if: env.GENERATE_STATUS == 'success'
