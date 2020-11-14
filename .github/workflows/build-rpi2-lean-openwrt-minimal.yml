@@ -232,9 +232,8 @@ jobs:
         if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
         run: |
           cd $OPENWRTROOT
-          unzip -qo bin-archive.zip
-          rm -f bin-archive.zip
-          rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
+          rclone copy bin/* ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
+          rclone copy dl-archive.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
 
       - name: Deploy Packages-Server
         if: env.GENERATE_STATUS == 'success'
@@ -246,6 +245,7 @@ jobs:
           cp -r server/* $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           zip -qr packages-server.zip packages-server
+          rclone copy packages-server.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
           
       - name: Organize Files
         id: organize
