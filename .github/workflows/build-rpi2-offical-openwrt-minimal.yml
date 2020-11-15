@@ -241,10 +241,9 @@ jobs:
         if: env.GENERATE_STATUS == 'success'
         run: |
           mkdir -p server/web/snapshots/targets/$TARGET/$SUBTARGET
-          cp -r $OPENWRTROOT/bin/packages server/web/snapshots
-          cp -r $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages server/web/snapshots/targets/$TARGET/$SUBTARGET
-          mkdir -p $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
-          cp -r server/* $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
+          mv $OPENWRTROOT/bin/packages server/web/snapshots
+          mv $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages server/web/snapshots/targets/$TARGET/$SUBTARGET
+          mv server $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
           cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
           zip -qr packages-server.zip packages-server
           rclone copy packages-server.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/offical/targets/$TARGET/$SUBTARGET
