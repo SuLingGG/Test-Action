@@ -232,7 +232,7 @@ jobs:
         if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
         run: |
           cd $OPENWRTROOT
-          rclone copy bin/* ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
+          rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")
           rclone copy dl-archive.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
 
       - name: Deploy Packages-Server
