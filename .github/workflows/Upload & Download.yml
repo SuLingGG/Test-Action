@@ -45,3 +45,4 @@ jobs:
           run: |
             cd openwrt
             tree .
+            echo "::warning file=Firmware-OpenWrt.cc::https://openwrt.cc/snapshots/$(date +"%Y-%m-%d")/lean/targets
