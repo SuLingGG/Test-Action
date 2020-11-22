@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 1 Offical Minimal OpenWrt
+name: Build Raspberry Pi 1 Offical OpenWrt
 
 on:
   repository_dispatch:
