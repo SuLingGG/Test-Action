@@ -158,20 +158,19 @@ jobs:
         make checksum
         echo "::set-output name=GENERATE_STATUS::success"
 
-    - name: Compress Folders
+    - name: Compress DL Folder Archive
       run: |
         cd $OPENWRTROOT
-        zip -qr bin-archive.zip bin
         zip -qr dl-archive.zip dl
 
-    - name: Upload Bin Folder Archive
+    - name: Upload Bin Folder
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.GENERATE_STATUS == 'success'
       with:
         name: bin-archive
-        path: openwrt/bin-archive.zip
+        path: openwrt/bin
         
-    - name: Upload DL Folder Archive
+    - name: Upload DL Archive
       uses: actions/upload-artifact@main
       if: steps.generate.outputs.GENERATE_STATUS == 'success'
       with:
@@ -195,12 +194,12 @@ jobs:
           echo "FIRMWARE=$(echo '${{needs.Build.outputs.FIRMWARE}}')" >> $GITHUB_ENV
           echo "GENERATE_STATUS=$(echo '${{needs.Build.outputs.GENERATE_STATUS}}')" >> $GITHUB_ENV
         
-      - name: Download Bin Folder Archive
+      - name: Download Bin Folder
         uses: actions/download-artifact@v2
         if: env.GENERATE_STATUS == 'success'
         with:
           name: bin-archive
-          path: openwrt
+          path: openwrt/bin
           
       - name: Download DL Folder Archive
         uses: actions/download-artifact@v2
@@ -234,7 +233,7 @@ jobs:
           cd $OPENWRTROOT
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean
           rclone copy dl-archive.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
-          echo "::warning file=Firmware-OpenWrt.cc::https://openwrt.cc/snapshots/$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET"
+          echo "::warning file=Firmware-OpenWrt.cc::Download Link: https://openwrt.cc/snapshots/$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET"
 
       - name: Deploy Packages-Server
         if: env.GENERATE_STATUS == 'success'
