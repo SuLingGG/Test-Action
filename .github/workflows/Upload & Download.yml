@@ -11,7 +11,6 @@ jobs:
     - name: Configure Rclone
       env:
         RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-      if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
       run: |
         curl https://rclone.org/install.sh | sudo bash
         mkdir -p /home/runner/.config/rclone/
