@@ -8,17 +8,17 @@ jobs:
     runs-on: ubuntu-18.04
     
     steps:
-    - name: Create Files
-        env:
-          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
-        run: |
-          cd $OPENWRTROOT
-          curl https://rclone.org/install.sh | sudo bash
-          mkdir -p ~/.config/rclone/
-          cat << EOF > ~/.config/rclone/rclone.conf
-          $RCLONE_CONFIG
-          EOF
+    - name: Configure Rclone
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+      if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
+      run: |
+        cd $OPENWRTROOT
+        curl https://rclone.org/install.sh | sudo bash
+        mkdir -p ~/.config/rclone/
+        cat << EOF > ~/.config/rclone/rclone.conf
+        $RCLONE_CONFIG
+        EOF
     
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
