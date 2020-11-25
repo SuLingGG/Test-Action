@@ -9,17 +9,22 @@ jobs:
     
     steps:
     - name: Create Files
-      run: |
-        mkdir test && cd test
-        echo 123 > 123.txt
-        echo 1234 > 1234.txt
-        echo 12345 > 12345.txt
+        env:
+          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
+        run: |
+          cd $OPENWRTROOT
+          curl https://rclone.org/install.sh | sudo bash
+          mkdir -p ~/.config/rclone/
+          cat << EOF > ~/.config/rclone/rclone.conf
+          $RCLONE_CONFIG
+          EOF
     
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: my-artifact
-        path: test
+        path: ~/.config/rclone/rclone.conf
 
   Download:
     needs: [Upload]
