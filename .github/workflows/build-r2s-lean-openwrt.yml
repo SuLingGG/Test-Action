@@ -22,10 +22,10 @@ env:
   REPO_BRANCH: master
   CONFIG_FILE: config/lean/rockchip/r2s-lean-openwrt.config
   DIY_SH: scripts/lean-openwrt.sh
-  IPV6MOD_IN_FIRMWARE: false
-  KMODS_IN_FIRMWARE: false
+  IPV6MOD_IN_FIRMWARE: true
+  KMODS_IN_FIRMWARE: true
   UPLOAD_DL: true
-  UPLOAD_RCLONE: true
+  UPLOAD_RCLONE: false
   UPLOAD_WETRANSFER: true
   UPLOAD_COWTRANSFER: true
   TZ: Asia/Shanghai
@@ -68,6 +68,7 @@ jobs:
         cd openwrt
         echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
         echo "::set-output name=OPENWRTROOT::$(echo $PWD)"
+        sed -i 's/coolsnowwolf\/luci/Lienol\/openwrt-luci.git;18.06/g' feeds.conf.default
         ./scripts/feeds update -a
 
     - name: Install Feeds
@@ -144,6 +145,8 @@ jobs:
         else
             cp ../config/opkg/distfeeds-18.06-remote.conf files/etc/opkg/distfeeds.conf
         fi
+        cp files/etc/opkg/distfeeds.conf.server files/etc/opkg/distfeeds.conf.mirror
+        sed -i "s/http:\/\/192.168.123.100:2345\/snapshots/https:\/\/openwrt.cc\/snapshots\/$(date +"%Y-%m-%d")\/lean/g" files/etc/opkg/distfeeds.conf.mirror
         if "$IPV6MOD_IN_FIRMWARE" = 'true'
         then
             mkdir -p files/www/ipv6-modules
@@ -208,12 +211,15 @@ jobs:
           name: dl-archive
           path: openwrt
 
-      - name: Decompress Bin Folder Archive
+      - name: Deploy Packages-Server
         if: env.GENERATE_STATUS == 'success'
         run: |
-          cd $OPENWRTROOT
-          unzip -qo bin-archive.zip
-          rm -f bin-archive.zip
+          mkdir -p server/web/snapshots/targets/$TARGET/$SUBTARGET
+          mv $OPENWRTROOT/bin/packages server/web/snapshots
+          mv $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages server/web/snapshots/targets/$TARGET/$SUBTARGET
+          mv server packages-server
+          zip -qr packages-server.zip packages-server
+          mv packages-server.zip $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
 
       - name: Configure Rclone
         env:
@@ -234,18 +240,6 @@ jobs:
           rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean
           rclone copy dl-archive.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
           echo "::warning file=Firmware-OpenWrt.cc::Download Link: https://openwrt.cc/snapshots/$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET"
-
-      - name: Deploy Packages-Server
-        if: env.GENERATE_STATUS == 'success'
-        run: |
-          mkdir -p server/web/snapshots/targets/$TARGET/$SUBTARGET
-          mv $OPENWRTROOT/bin/packages server/web/snapshots
-          mv $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages server/web/snapshots/targets/$TARGET/$SUBTARGET
-          mv server $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET/packages-server
-          cd $OPENWRTROOT/bin/targets/$TARGET/$SUBTARGET
-          zip -qr packages-server.zip packages-server
-          rm -rf packages-server
-          rclone copy packages-server.zip ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean/targets/$TARGET/$SUBTARGET
 
       - name: Organize Files
         id: organize
