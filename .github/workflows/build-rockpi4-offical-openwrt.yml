@@ -6,11 +6,11 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Build Raspberry Pi 4 Lean's OpenWrt
+name: Build Rock Pi 4 Offical OpenWrt
 
 on:
   repository_dispatch:
-    types: [lean, rpi4]
+    types: [offical, rockpi4]
   workflow_dispatch:
 #  schedule:
 #    - cron: 0 18 * * *
@@ -18,13 +18,13 @@ on:
 #    types: started
 
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: master
-  CONFIG_FILE: config/lean/bcm27xx/rpi4-lean-target.config
-  DIY_SH: scripts/lean-openwrt.sh
+  CONFIG_FILE: config/offical/rockchip/rockpi4-offical-target.config
+  DIY_SH: scripts/offical-openwrt.sh
   IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
-  UPLOAD_RCLONE: true
+  UPLOAD_RCLONE: false
   UPLOAD_WETRANSFER: true
   UPLOAD_COWTRANSFER: true
   TZ: Asia/Shanghai
@@ -66,8 +66,8 @@ jobs:
       run: |
         cd openwrt
         echo "OPENWRTROOT=$PWD" >> $GITHUB_ENV
+        sed -i 's/luci.git/luci.git\;openwrt-19.07/g' feeds.conf.default
         echo "::set-output name=OPENWRTROOT::$(echo $PWD)"
-        sed -i 's/coolsnowwolf\/luci/Lienol\/openwrt-luci.git;18.06/g' feeds.conf.default
         ./scripts/feeds update -a
 
     - name: Install Feeds
@@ -79,12 +79,12 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
-        cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
         ../scripts/preset-clash-core.sh armv8
         ../scripts/preset-terminal-tools.sh
+        ../scripts/create-acl.sh -a
 
     - name: Download Package
       id: package
@@ -107,7 +107,7 @@ jobs:
         make tools/compile -j$(nproc) || make tools/compile -j1 V=s
         make toolchain/compile -j$(nproc) || make toolchain/compile -j1 V=s
         make target/compile -j$(nproc) || make target/compile -j1 V=s IGNORE_ERRORS=1
-        make diffconfig
+        make buildinfo
         make package/compile -j$(nproc) IGNORE_ERRORS=1 || make package/compile -j1 V=s IGNORE_ERRORS=1
         make package/index
         cd $OPENWRTROOT/bin/packages/*
@@ -141,12 +141,12 @@ jobs:
         then
             mkdir -p files/www/snapshots
             cp -r bin/targets files/www/snapshots
-            cp ../config/opkg/distfeeds-18.06-local.conf files/etc/opkg/distfeeds.conf
+            cp ../config/opkg/distfeeds-19.07-local.conf files/etc/opkg/distfeeds.conf
         else
-            cp ../config/opkg/distfeeds-18.06-remote.conf files/etc/opkg/distfeeds.conf
+            cp ../config/opkg/distfeeds-19.07-remote.conf files/etc/opkg/distfeeds.conf
         fi
         cp files/etc/opkg/distfeeds.conf.server files/etc/opkg/distfeeds.conf.mirror
-        sed -i "s/http:\/\/192.168.123.100:2345\/snapshots/https:\/\/openwrt.cc\/snapshots\/$(date +"%Y-%m-%d")\/lean/g" files/etc/opkg/distfeeds.conf.mirror
+        sed -i "s/http:\/\/192.168.123.100:2345\/snapshots/https:\/\/openwrt.cc\/snapshots\/$(date +"%Y-%m-%d")\/offical/g" files/etc/opkg/distfeeds.conf.mirror
         if "$IPV6MOD_IN_FIRMWARE" = 'true'
         then
             mkdir -p files/www/ipv6-modules
@@ -218,7 +218,7 @@ jobs:
         if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true'
         run: |
           cd $OPENWRTROOT
-          rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/lean
+          rclone copy bin ${{ secrets.RCLONE_REMOTE }}:$(date +"%Y-%m-%d")/offical
           echo "::warning file=Firmware-GoogleDrive::Download Link: https://drive.google.com/drive/folders/1SkNpJkhmG8veheL3ADVFoVTkvfhWjW0P"
 
       - name: Organize Files
