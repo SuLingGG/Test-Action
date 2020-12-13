@@ -1,0 +1,57 @@
+name: Upload & Download
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Upload:
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - name: Configure Rclone
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+        mkdir -p /home/runner/.config/rclone/
+        cat << EOF > /home/runner/.config/rclone/rclone.conf
+        $RCLONE_CONFIG
+        EOF
+    
+    - name: Upload Artifact (True)
+      uses: actions/upload-artifact@v2
+      if: secrets.RCLONE_CONFIG != ''
+      with:
+        name: rclone-true.conf
+        path: /home/runner/.config/rclone/rclone.conf
+
+    - name: Upload Artifact (False)
+      uses: actions/upload-artifact@v2
+      if: secrets.RCLONE_CONFIG_TEST == ''
+      with:
+        name: rclone-false.conf
+        path: /home/runner/.config/rclone/rclone.conf
+        
+  Download:
+    needs: [Upload]
+    runs-on: ubuntu-18.04
+
+    steps:
+        - name: Create Folder
+          run: |
+            sudo apt-get upgrade && sudo apt-get install tree -y
+            mkdir -p openwrt
+        - name: Download Files
+          uses: actions/download-artifact@v2
+          id: download
+          with:
+            name: 'my-artifact'
+            path: openwrt
+
+        - name: Echo Download Path
+          run: echo ${{steps.download.outputs.download-path}}
+          
+        - name: Tree
+          run: |
+            cd openwrt
+            tree .
