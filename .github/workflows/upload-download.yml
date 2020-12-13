@@ -20,9 +20,9 @@ jobs:
 
     - name: Upload Artifact (False)
       env:
-        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG_TEST }}
+        RCLONE_CONFIG_TEST: ${{ secrets.RCLONE_CONFIG_TEST }}
       uses: actions/upload-artifact@v2
-      if: env.RCLONE_CONFIG_TEST == ''
+      if: env.RCLONE_CONFIG_TEST != ''
       with:
         name: rclone-false.conf
         path: /home/runner/.config/rclone/rclone.conf
