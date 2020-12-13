@@ -19,15 +19,19 @@ jobs:
         EOF
     
     - name: Upload Artifact (True)
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
       uses: actions/upload-artifact@v2
-      if: secrets.RCLONE_CONFIG != ''
+      if: env.RCLONE_CONFIG != ''
       with:
         name: rclone-true.conf
         path: /home/runner/.config/rclone/rclone.conf
 
     - name: Upload Artifact (False)
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
       uses: actions/upload-artifact@v2
-      if: secrets.RCLONE_CONFIG_TEST == ''
+      if: env.RCLONE_CONFIG_TEST == ''
       with:
         name: rclone-false.conf
         path: /home/runner/.config/rclone/rclone.conf
