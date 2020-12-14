@@ -1,0 +1,67 @@
+name: Upload & Download
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Upload:
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - name: Configure Rclone
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+      run: |
+        curl https://rclone.org/install.sh | sudo bash
+        mkdir -p /home/runner/.config/rclone/
+        cat << EOF > /home/runner/.config/rclone/rclone.conf
+        $RCLONE_CONFIG
+        EOF
+
+    - name: Upload Artifact (False)
+      env:
+        RCLONE_CONFIG_TEST: ${{ secrets.RCLONE_CONFIG_TEST }}
+      uses: actions/upload-artifact@v2
+      if: env.RCLONE_CONFIG_TEST != ''
+      with:
+        name: rclone-false.conf
+        path: /home/runner/.config/rclone/rclone.conf
+
+    - name: Rclone Upload
+      env:
+        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+        RCLONE_REMOTE: ${{ secrets.RCLONE_REMOTE }}
+      if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true' && env.RCLONE_CONFIG != ''
+      run: |
+        cd $OPENWRTROOT
+        curl https://rclone.org/install.sh | sudo bash
+        mkdir -p ~/.config/rclone/
+        cat << EOF > ~/.config/rclone/rclone.conf
+        $RCLONE_CONFIG
+        EOF
+        rclone copy /home/runner/.config/rclone/rclone.conf $RCLONE_REMOTE:$(date +"%Y-%m-%d")/lean
+        echo "::warning file=Firmware-GoogleDrive::Download Link: https://drive.google.com/drive/folders/1SkNpJkhmG8veheL3ADVFoVTkvfhWjW0P"
+        
+  Download:
+    needs: [Upload]
+    runs-on: ubuntu-18.04
+
+    steps:
+        - name: Create Folder
+          run: |
+            sudo apt-get upgrade && sudo apt-get install tree -y
+            mkdir -p openwrt
+        - name: Download Files
+          uses: actions/download-artifact@v2
+          id: download
+          with:
+            name: 'rclone-false.conf'
+            path: openwrt
+
+        - name: Echo Download Path
+          run: echo ${{steps.download.outputs.download-path}}
+          
+        - name: Tree
+          run: |
+            cd openwrt
+            tree .
