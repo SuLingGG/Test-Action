@@ -12,7 +12,6 @@ jobs:
       env:
         RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
       run: |
-        curl https://rclone.org/install.sh | sudo bash
         mkdir -p /home/runner/.config/rclone/
         cat << EOF > /home/runner/.config/rclone/rclone.conf
         $RCLONE_CONFIG
