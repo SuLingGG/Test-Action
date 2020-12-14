@@ -20,9 +20,6 @@ jobs:
         cat << EOF > ~/.config/rclone/rclone.conf
         $RCLONE_CONFIG
         EOF
-        echo 123 > 123.txt
-        rclone copy 123.txt $RCLONE_REMOTE:$(date +"%Y-%m-%d")/lean
-        echo "::warning file=Firmware-GoogleDrive::Download Link: https://drive.google.com/drive/folders/1SkNpJkhmG8veheL3ADVFoVTkvfhWjW0P"
         
   Download:
     needs: [Upload]
