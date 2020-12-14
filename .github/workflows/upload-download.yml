@@ -8,24 +8,6 @@ jobs:
     runs-on: ubuntu-18.04
     
     steps:
-    - name: Configure Rclone
-      env:
-        RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-      run: |
-        mkdir -p /home/runner/.config/rclone/
-        cat << EOF > /home/runner/.config/rclone/rclone.conf
-        $RCLONE_CONFIG
-        EOF
-
-    - name: Upload Artifact (False)
-      env:
-        RCLONE_CONFIG_TEST: ${{ secrets.RCLONE_CONFIG_TEST }}
-      uses: actions/upload-artifact@v2
-      if: env.RCLONE_CONFIG_TEST != ''
-      with:
-        name: rclone-false.conf
-        path: /home/runner/.config/rclone/rclone.conf
-
     - name: Rclone Upload
       env:
         RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
