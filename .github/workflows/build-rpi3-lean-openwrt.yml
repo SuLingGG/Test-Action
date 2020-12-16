@@ -211,7 +211,7 @@ jobs:
           curl https://rclone.org/install.sh | sudo bash
           mkdir -p ~/.config/rclone/
           cat << EOF > ~/.config/rclone/rclone.conf
-          $RCLONE_CONFIG
+          ${{ secrets.RCLONE_CONFIG }}
           EOF
           rclone copy bin $RCLONE_REMOTE:$(date +"%Y-%m-%d")/lean
           echo "::warning file=Firmware-GoogleDrive::Download Link: https://drive.google.com/drive/folders/1SkNpJkhmG8veheL3ADVFoVTkvfhWjW0P"
