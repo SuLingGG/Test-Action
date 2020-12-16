@@ -11,7 +11,7 @@ jobs:
     - name: Rclone Upload
       env:
         RCLONE_REMOTE: ${{ secrets.RCLONE_REMOTE }}
-      if: secrets.RCLONE_CONFIG != ''
+      if: env.RCLONE_REMOTE != ''
       run: |
         cd $OPENWRTROOT
         curl https://rclone.org/install.sh | sudo bash
