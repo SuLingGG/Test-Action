@@ -20,9 +20,9 @@ on:
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: archive/config/minimal/lean/bcm27xx/rpi3-lean-openwrt-minimal.config
+  CONFIG_FILE: config/lean/bcm27xx/rpi3-lean-target.config
   DIY_SH: scripts/lean-openwrt.sh
-  IPV6MOD_IN_FIRMWARE: false
+  IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
   UPLOAD_RCLONE: true
   UPLOAD_WETRANSFER: true
@@ -79,6 +79,7 @@ jobs:
       run: |
         [ -e files ] && mv files $OPENWRTROOT/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE $OPENWRTROOT/.config
+        cat config/lean/bcm27xx/rpi-lean-extra.config >> $OPENWRTROOT/.config
         chmod +x scripts/*.sh
         cd $OPENWRTROOT
         ../$DIY_SH
@@ -203,9 +204,8 @@ jobs:
 
       - name: Rclone Upload
         env:
-          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
           RCLONE_REMOTE: ${{ secrets.RCLONE_REMOTE }}
-        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true' && env.RCLONE_CONFIG != ''
+        if: env.GENERATE_STATUS == 'success' && env.UPLOAD_RCLONE == 'true' && env.RCLONE_REMOTE != ''
         run: |
           cd $OPENWRTROOT
           curl https://rclone.org/install.sh | sudo bash
