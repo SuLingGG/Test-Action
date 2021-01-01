@@ -1,0 +1,12 @@
+# Enable settings (true/false)
+enable.init.settings = false
+
+# Lan IP settings
+network.lan.ipaddr = 192.168.123.100
+network.lan.dns = 192.168.123.1
+network.lan.gateway = 192.168.123.1
+network.lan.broadcast = 192.168.123.255
+network.lan.netmask = 255.255.255.0
+
+# Lan DHCP settings (enable/disable)
+dhcp.lan = enable
