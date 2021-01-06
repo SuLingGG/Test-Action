@@ -112,6 +112,12 @@ rm -rf syncthing
 svn co https://github.com/openwrt/packages/trunk/utils/syncthing
 popd
 
+# Use snapshots hostapd package
+pushd package/network/services
+rm -rf hostapd
+svn co https://github.com/openwrt/openwrt/trunk/package/network/services/hostapd
+popd
+
 # Fix mt76 wireless driver
 pushd package/kernel/mt76
 rm -f Makefile
